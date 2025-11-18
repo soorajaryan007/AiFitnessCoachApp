@@ -13,7 +13,35 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
 
+// ... inside function Home() ...
 
+  // 👇 NEW FUNCTION: Converts the Plan JSON into a readable script
+  const generateFullScript = (plan: any) => {
+    if (!plan) return "";
+
+    let script = `Here is your personalized fitness plan. `;
+    
+    // Add Workout details
+    if (plan.workout && plan.workout.length > 0) {
+      script += `For today's workout, you have ${plan.workout.length} exercises. `;
+      plan.workout.forEach((item: any, index: number) => {
+        script += `Exercise ${index + 1}: ${item.exercise}. Do ${item.sets} sets of ${item.reps} reps. `;
+      });
+    }
+
+    // Add Diet details
+    if (plan.diet && plan.diet.length > 0) {
+      script += ` For your nutrition, here is the menu. `;
+      plan.diet.forEach((item: any) => {
+        script += `For ${item.meal}, have ${item.food}, which is about ${item.calories} calories. `;
+      });
+    }
+
+    script += "You got this!";
+    return script;
+  };
+
+  // ... existing playAudio function ...
 
 const [isSpeaking, setIsSpeaking] = useState(false);
 
@@ -168,6 +196,15 @@ const [isSpeaking, setIsSpeaking] = useState(false);
                     <RefreshCw size={18} className={loading ? "animate-spin" : ""} /> 
                     Regenerate Plan
                   </button>
+{/* 👇 NEW "READ PLAN" BUTTON 👇 */}
+                  <button 
+                    onClick={() => playAudio(generateFullScript(plan))} // <--- Calls the script generator
+                    disabled={isSpeaking}
+                    className={`flex items-center gap-2 px-4 py-2 rounded text-white font-bold text-sm transition-all ${isSpeaking ? "bg-red-500 animate-pulse" : "bg-purple-600 hover:bg-purple-500"}`}
+                  >
+                    {isSpeaking ? <Loader2 size={18} className="animate-spin" /> : <Volume2 size={18} />}
+                    {isSpeaking ? "Speaking..." : "Read Plan"}
+                  </button>
 
                   {/* DOWNLOAD BUTTON */}
                   <button 
@@ -184,14 +221,7 @@ const [isSpeaking, setIsSpeaking] = useState(false);
 <div className={`p-6 rounded-xl border text-center italic text-xl relative ${cardBg} ${darkMode ? "border-blue-500/30" : "border-blue-200 bg-blue-50"}`}>
   "{plan.motivation}"
 
-  <button 
-    onClick={() => playAudio(plan.motivation)}
-    disabled={isSpeaking}
-    className="absolute bottom-2 right-2 p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-all"
-    title="Read Aloud"
-  >
-    {isSpeaking ? <Loader2 size={16} className="animate-spin" /> : <Volume2 size={16} />}
-  </button>
+  
 </div>
 
             {/* Workouts */}

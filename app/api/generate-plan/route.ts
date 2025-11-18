@@ -1,22 +1,15 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import Groq from "groq-sdk";
 
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    // 1. Extract all the new fields
     const { 
       name, age, gender, height, weight, 
       goal, fitnessLevel, workoutLocation, dietaryPreferences 
     } = await req.json();
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
-    });
-
-    // 2. Update the Prompt to be super specific
     const prompt = `
       Act as a world-class personal trainer and nutritionist.
       
@@ -28,12 +21,14 @@ export async function POST(req: Request) {
       - Location/Equipment: ${workoutLocation}
       - Diet Type: ${dietaryPreferences}
       
-      Generate a 1-day detailed workout and diet plan strictly in this JSON format. 
+      Generate a 1-day detailed workout and diet plan strictly in JSON format. 
+      
       IMPORTANT constraints:
       1. Workout must be suitable for "${workoutLocation}" (e.g., if Home, no machines).
       2. Diet must strictly follow "${dietaryPreferences}".
+      3. Do not include any markdown formatting (like \`\`\`json), just return the raw JSON object.
       
-      JSON Structure:
+      JSON Structure to follow strictly:
       {
         "workout": [
           { "exercise": "Exercise Name", "sets": "3", "reps": "12", "image_prompt": "${gender} doing exercise in ${workoutLocation} environment high quality" }
@@ -45,16 +40,32 @@ export async function POST(req: Request) {
       }
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    let text = response.text();
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a fitness API that returns strictly structured JSON responses. No markdown. No conversational text."
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      // 👇 UPDATED MODEL NAME HERE 👇
+      model: "llama-3.3-70b-versatile", 
+      
+      response_format: { type: "json_object" }, 
+    });
+
+    const responseContent = completion.choices[0]?.message?.content;
     
-    // Clean markdown if present
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    
-    return NextResponse.json(JSON.parse(text));
+    if (!responseContent) {
+      throw new Error("No content generated");
+    }
+
+    return NextResponse.json(JSON.parse(responseContent));
   } catch (error) {
-    console.error(error);
+    console.error("Groq API Error:", error);
     return NextResponse.json({ error: "Failed to generate plan" }, { status: 500 });
   }
 }

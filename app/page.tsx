@@ -3,15 +3,14 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Loader2, Download, Moon, Sun } from "lucide-react"; 
+import { Loader2, Download, Moon, Sun, RefreshCw } from "lucide-react"; 
 import { downloadPDF } from "@/components/DownloadButton"; 
 
 export default function Home() {
-  const { register, handleSubmit } = useForm();
+  // 1. Get 'getValues' to reuse form data for regeneration
+  const { register, handleSubmit, getValues } = useForm();
   const [plan, setPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  
-  // ✨ NEW: Dark Mode State (Default is true/Dark)
   const [darkMode, setDarkMode] = useState(true);
 
   const onSubmit = async (data: any) => {
@@ -37,8 +36,7 @@ export default function Home() {
     setLoading(false);
   };
 
-  // --- HELPER FOR STYLES ---
-  // These variables switch colors based on the darkMode state
+  // Styles helper
   const bgMain = darkMode ? "bg-neutral-950 text-white" : "bg-white text-neutral-800";
   const cardBg = darkMode ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-200 shadow-sm";
   const inputBg = darkMode ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black";
@@ -47,7 +45,7 @@ export default function Home() {
     <div className={`min-h-screen p-8 transition-colors duration-300 ${bgMain}`}>
       <div className="max-w-4xl mx-auto relative">
         
-        {/* ✨ HEADER WITH TOGGLE BUTTON */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
             AI Fitness Coach
@@ -61,11 +59,9 @@ export default function Home() {
           </button>
         </div>
 
-        {/* INPUT FORM */}
+        {/* INPUT FORM (Hidden when plan exists) */}
         {!plan && (
           <form onSubmit={handleSubmit(onSubmit)} className={`space-y-4 p-6 rounded-xl border ${cardBg}`}>
-            
-            {/* Row 1: Basic Info */}
             <div className="grid grid-cols-3 gap-4">
               <input {...register("name")} placeholder="Name" className={`p-3 rounded border ${inputBg}`} required />
               <input {...register("age")} placeholder="Age" type="number" className={`p-3 rounded border ${inputBg}`} required />
@@ -76,38 +72,32 @@ export default function Home() {
               </select>
             </div>
 
-            {/* Row 2: Body Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <input {...register("height")} placeholder="Height (e.g., 5'10 or 178cm)" className={`p-3 rounded border ${inputBg}`} required />
+              <input {...register("height")} placeholder="Height (e.g., 5'10)" className={`p-3 rounded border ${inputBg}`} required />
               <input {...register("weight")} placeholder="Weight (e.g., 75kg)" className={`p-3 rounded border ${inputBg}`} required />
             </div>
 
-            {/* Row 3: Fitness Details */}
             <div className="grid grid-cols-2 gap-4">
               <select {...register("fitnessLevel")} className={`p-3 rounded border ${inputBg}`}>
                 <option value="Beginner">Beginner</option>
                 <option value="Intermediate">Intermediate</option>
                 <option value="Advanced">Advanced</option>
               </select>
-
               <select {...register("workoutLocation")} className={`p-3 rounded border ${inputBg}`}>
-                <option value="Gym">Gym (Full Equipment)</option>
-                <option value="Home">Home (No Equipment)</option>
-                <option value="Outdoor">Outdoor (Park/Run)</option>
+                <option value="Gym">Gym</option>
+                <option value="Home">Home</option>
+                <option value="Outdoor">Outdoor</option>
               </select>
             </div>
 
-            {/* Row 4: Goal & Diet */}
             <div className="grid grid-cols-2 gap-4">
               <select {...register("goal")} className={`p-3 rounded border ${inputBg}`}>
                 <option value="Weight Loss">Weight Loss</option>
                 <option value="Muscle Gain">Muscle Gain</option>
-                <option value="Endurance">Endurance / Cardio</option>
-                <option value="Maintenance">Stay Fit</option>
+                <option value="Endurance">Endurance</option>
               </select>
-
               <select {...register("dietaryPreferences")} className={`p-3 rounded border ${inputBg}`}>
-                <option value="Non-Veg">Non-Veg (Chicken/Meat)</option>
+                <option value="Non-Veg">Non-Veg</option>
                 <option value="Veg">Vegetarian</option>
                 <option value="Vegan">Vegan</option>
                 <option value="Keto">Keto</option>
@@ -115,31 +105,57 @@ export default function Home() {
             </div>
 
             <button disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white p-4 rounded font-bold flex justify-center items-center gap-2 transition-all">
-              {loading ? <Loader2 className="animate-spin" /> : "Generate My Personalized Plan"}
+              {loading ? <Loader2 className="animate-spin" /> : "Generate Plan"}
             </button>
           </form>
         )}
 
         {/* PLAN DISPLAY */}
         {plan && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 relative">
             
-            <div className="flex justify-between items-center">
+            {/* Loading Overlay during Regeneration */}
+            {loading && (
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+                <div className="bg-neutral-900 p-6 rounded-xl border border-neutral-700 text-center">
+                   <Loader2 className="animate-spin mx-auto mb-2 text-blue-500" size={32} />
+                   <p className="text-white font-bold">Designing new plan...</p>
+                </div>
+              </div>
+            )}
+
+            {/* Action Bar */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                <h2 className="text-2xl font-bold">Your Personalized Plan</h2>
-               <button 
-                  onClick={() => downloadPDF(plan)}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-bold text-sm"
-                >
-                  <Download size={18} /> Download PDF
-                </button>
+               
+               <div className="flex gap-2">
+                  {/* REGENERATE BUTTON */}
+                  <button 
+                    onClick={() => onSubmit(getValues())} // Calls API with existing form data
+                    disabled={loading}
+                    className={`flex items-center gap-2 px-4 py-2 rounded font-bold text-sm border transition-all ${darkMode ? "border-blue-500 text-blue-400 hover:bg-blue-500/10" : "border-blue-600 text-blue-600 hover:bg-blue-50"}`}
+                  >
+                    <RefreshCw size={18} className={loading ? "animate-spin" : ""} /> 
+                    Regenerate Plan
+                  </button>
+
+                  {/* DOWNLOAD BUTTON */}
+                  <button 
+                    onClick={() => downloadPDF(plan)}
+                    disabled={loading}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-bold text-sm"
+                  >
+                    <Download size={18} /> Download PDF
+                  </button>
+               </div>
             </div>
 
-            {/* Motivation Section */}
+            {/* Motivation */}
             <div className={`p-6 rounded-xl border text-center italic text-xl ${cardBg} ${darkMode ? "border-blue-500/30" : "border-blue-200 bg-blue-50"}`}>
               "{plan.motivation}"
             </div>
 
-            {/* Workout Cards */}
+            {/* Workouts */}
             <h2 className="text-2xl font-bold">🏋️ Today's Workout</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {plan.workout?.map((item: any, index: number) => (
@@ -157,7 +173,7 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Diet Cards */}
+            {/* Diet */}
             <h2 className="text-2xl font-bold">🥗 Diet Plan</h2>
             <div className="grid md:grid-cols-3 gap-4">
               {plan.diet?.map((item: any, index: number) => (
@@ -176,8 +192,9 @@ export default function Home() {
               ))}
             </div>
 
+            {/* Start Over Button */}
             <button onClick={() => setPlan(null)} className={`w-full border p-3 rounded transition-colors ${darkMode ? "border-neutral-700 hover:bg-neutral-900" : "border-neutral-300 hover:bg-gray-100 text-neutral-800"}`}>
-              Generate New Plan
+              Start Over (Change Settings)
             </button>
 
           </motion.div>

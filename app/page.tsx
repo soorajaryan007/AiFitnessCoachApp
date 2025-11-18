@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Loader2, Download, Moon, Sun, RefreshCw } from "lucide-react"; 
+import { Loader2, Download, Moon, Sun, RefreshCw, Volume2 } from "lucide-react";
 import { downloadPDF } from "@/components/DownloadButton"; 
 
 export default function Home() {
@@ -12,6 +12,36 @@ export default function Home() {
   const [plan, setPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+
+
+
+const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const playAudio = async (text: string) => {
+    if (!text) return;
+    setIsSpeaking(true);
+    
+    try {
+      const response = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate speech");
+
+      const blob = await response.blob();
+      const audio = new Audio(URL.createObjectURL(blob));
+      audio.play();
+      
+      // Reset loading state when audio ends
+      audio.onended = () => setIsSpeaking(false);
+    } catch (error) {
+      console.error("Audio Error:", error);
+      setIsSpeaking(false);
+    }
+  };
+
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -150,16 +180,27 @@ export default function Home() {
                </div>
             </div>
 
-            {/* Motivation */}
-            <div className={`p-6 rounded-xl border text-center italic text-xl ${cardBg} ${darkMode ? "border-blue-500/30" : "border-blue-200 bg-blue-50"}`}>
-              "{plan.motivation}"
-            </div>
+            {/* Motivation Section with Audio Button */}
+<div className={`p-6 rounded-xl border text-center italic text-xl relative ${cardBg} ${darkMode ? "border-blue-500/30" : "border-blue-200 bg-blue-50"}`}>
+  "{plan.motivation}"
+
+  <button 
+    onClick={() => playAudio(plan.motivation)}
+    disabled={isSpeaking}
+    className="absolute bottom-2 right-2 p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-all"
+    title="Read Aloud"
+  >
+    {isSpeaking ? <Loader2 size={16} className="animate-spin" /> : <Volume2 size={16} />}
+  </button>
+</div>
 
             {/* Workouts */}
             <h2 className="text-2xl font-bold">🏋️ Today's Workout</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {plan.workout?.map((item: any, index: number) => (
                 <div key={index} className={`rounded-xl overflow-hidden border ${cardBg}`}>
+
+
                   <img 
                     src={`https://image.pollinations.ai/prompt/${encodeURIComponent(item.image_prompt)}?nologo=true`} 
                     alt={item.exercise} 

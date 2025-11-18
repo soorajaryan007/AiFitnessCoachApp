@@ -1,70 +1,171 @@
-import { Page, Text, View, Document, StyleSheet, pdf, Image } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 
-// Define PDF Styles
+// 1. Define Professional Styles (Table Layout)
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Helvetica', backgroundColor: '#f5f5f5' },
-  header: { fontSize: 24, marginBottom: 10, textAlign: 'center', color: '#2563eb', fontWeight: 'bold' },
-  subHeader: { fontSize: 12, marginBottom: 20, textAlign: 'center', color: '#666' },
-  section: { marginBottom: 15, padding: 15, backgroundColor: 'white', borderRadius: 5 },
-  sectionTitle: { fontSize: 16, marginBottom: 10, color: '#1e40af', borderBottom: '1px solid #e5e7eb', paddingBottom: 5 },
-  row: { flexDirection: 'row', marginBottom: 5 },
-  label: { width: 100, fontSize: 10, color: '#666', fontWeight: 'bold' },
-  value: { flex: 1, fontSize: 10, color: '#000' },
-  card: { marginBottom: 10, padding: 10, backgroundColor: '#f8fafc', borderRadius: 3 },
-  cardTitle: { fontSize: 12, fontWeight: 'bold', color: '#0f172a' },
-  cardText: { fontSize: 10, color: '#475569', marginTop: 2 },
-  footer: { position: 'absolute', bottom: 30, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#999' }
+  page: { 
+    padding: 40, 
+    fontFamily: 'Helvetica', 
+    backgroundColor: '#ffffff',
+    color: '#333333'
+  },
+  headerSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 20,
+    borderBottom: '2px solid #2563eb',
+    paddingBottom: 10
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    color: '#1e3a8a', // Dark Blue
+    textTransform: 'uppercase'
+  },
+  subTitle: {
+    fontSize: 10,
+    color: '#64748b'
+  },
+  quoteBox: {
+    backgroundColor: '#f8fafc',
+    borderLeft: '4px solid #2563eb',
+    padding: 10,
+    marginBottom: 25,
+    fontStyle: 'italic',
+    fontSize: 12,
+    color: '#475569'
+  },
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    marginBottom: 10, 
+    marginTop: 10,
+    color: '#000',
+    textTransform: 'uppercase',
+    letterSpacing: 1
+  },
+  // Table Styles
+  table: { 
+    width: "100%", 
+    marginBottom: 20,
+    borderWidth: 1, 
+    borderColor: '#e2e8f0',
+  },
+  tableHeader: { 
+    flexDirection: 'row', 
+    backgroundColor: '#eff6ff', 
+    borderBottomWidth: 1, 
+    borderColor: '#e2e8f0',
+    padding: 8,
+  },
+  tableRow: { 
+    flexDirection: 'row', 
+    borderBottomWidth: 1, 
+    borderColor: '#e2e8f0',
+    padding: 8,
+    alignItems: 'center'
+  },
+  col1: { width: '50%' }, // Exercise/Food Name
+  col2: { width: '25%' }, // Sets/Meal Type
+  col3: { width: '25%' }, // Reps/Calories
+  
+  boldText: { fontSize: 10, fontWeight: 'bold' },
+  normalText: { fontSize: 10, color: '#4b5563' },
+  
+  disclaimer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 40,
+    right: 40,
+    fontSize: 8,
+    color: '#94a3b8',
+    textAlign: 'center',
+    borderTop: '1px solid #e2e8f0',
+    paddingTop: 10
+  }
 });
 
-// PDF Document Structure
-const MyDocument = ({ plan }: { plan: any }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      
-      {/* HEADER */}
-      <Text style={styles.header}>AI Fitness Plan</Text>
-      <Text style={styles.subHeader}>Personalized Roadmap for {plan.user_name || "You"}</Text>
+// 2. The PDF Structure
+const MyDocument = ({ plan }: { plan: any }) => {
+  const today = new Date().toLocaleDateString();
 
-      {/* MOTIVATION */}
-      <View style={styles.section}>
-        <Text style={{ fontSize: 12, fontStyle: 'italic', textAlign: 'center', color: '#4b5563' }}>
-          "{plan.motivation}"
-        </Text>
-      </View>
-
-      {/* WORKOUT SECTION */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🏋️ Today's Workout</Text>
-        {plan.workout?.map((item: any, index: number) => (
-          <View key={index} style={styles.card}>
-            <Text style={styles.cardTitle}>{index + 1}. {item.exercise}</Text>
-            <Text style={styles.cardText}>{item.sets} Sets  •  {item.reps} Reps</Text>
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        
+        {/* HEADER */}
+        <View style={styles.headerSection}>
+          <View>
+            <Text style={styles.title}>Fitness Blueprint</Text>
+            <Text style={styles.subTitle}>Personalized AI Coach</Text>
           </View>
-        ))}
-      </View>
+          <Text style={styles.subTitle}>Date: {today}</Text>
+        </View>
 
-      {/* DIET SECTION */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🥗 Nutrition Plan</Text>
-        {plan.diet?.map((item: any, index: number) => (
-          <View key={index} style={styles.card}>
-            <View style={styles.row}>
-              <Text style={{...styles.cardTitle, color: '#2563eb', width: 80}}>{item.meal}</Text>
-              <Text style={styles.cardTitle}>{item.food}</Text>
+        {/* MOTIVATION BOX */}
+        <View style={styles.quoteBox}>
+          <Text>"{plan.motivation || "Consistency is key."}"</Text>
+        </View>
+
+        {/* --- WORKOUT TABLE --- */}
+        <Text style={styles.sectionTitle}>Daily Workout Routine</Text>
+        <View style={styles.table}>
+          {/* Table Header */}
+          <View style={styles.tableHeader}>
+            <Text style={[styles.col1, styles.boldText]}>EXERCISE</Text>
+            <Text style={[styles.col2, styles.boldText]}>SETS</Text>
+            <Text style={[styles.col3, styles.boldText]}>REPS / DURATION</Text>
+          </View>
+          
+          {/* Table Rows */}
+          {plan.workout?.map((item: any, index: number) => (
+            <View key={index} style={styles.tableRow}>
+              <Text style={[styles.col1, styles.boldText]}>{index + 1}. {item.exercise}</Text>
+              <Text style={[styles.col2, styles.normalText]}>{item.sets} Sets</Text>
+              <Text style={[styles.col3, styles.normalText]}>{item.reps}</Text>
             </View>
-            <Text style={{ fontSize: 9, color: '#64748b', marginLeft: 80 }}>{item.calories} Calories</Text>
+          ))}
+        </View>
+
+        {/* --- DIET TABLE --- */}
+        <Text style={styles.sectionTitle}>Nutrition Plan</Text>
+        <View style={styles.table}>
+          {/* Table Header */}
+          <View style={styles.tableHeader}>
+            <Text style={[styles.col1, styles.boldText]}>MEAL / FOOD ITEM</Text>
+            <Text style={[styles.col2, styles.boldText]}>TYPE</Text>
+            <Text style={[styles.col3, styles.boldText]}>CALORIES</Text>
           </View>
-        ))}
-      </View>
 
-      {/* FOOTER */}
-      <Text style={styles.footer}>Generated by AI Fitness Coach • Built with Next.js & Gemini</Text>
-    </Page>
-  </Document>
-);
+          {/* Table Rows */}
+          {plan.diet?.map((item: any, index: number) => (
+            <View key={index} style={styles.tableRow}>
+              <View style={styles.col1}>
+                <Text style={styles.boldText}>{item.food}</Text>
+              </View>
+              <Text style={[styles.col2, styles.normalText]}>{item.meal}</Text>
+              <Text style={[styles.col3, styles.normalText]}>{item.calories} kcal</Text>
+            </View>
+          ))}
+        </View>
 
+        {/* FOOTER / DISCLAIMER */}
+        <Text style={styles.disclaimer}>
+          This plan was generated by AI (Groq & Llama-3). Please consult a physician before starting any new diet or exercise program. 
+          Built with Next.js.
+        </Text>
+
+      </Page>
+    </Document>
+  );
+};
+
+// 3. Export Function
 export const downloadPDF = async (plan: any) => {
-  const blob = await pdf(<MyDocument plan={plan} />).toBlob();
-  saveAs(blob, 'My_AI_Fitness_Plan.pdf');
+  // Fix for some Next.js environments
+  if (typeof window !== 'undefined') {
+    const blob = await pdf(<MyDocument plan={plan} />).toBlob();
+    saveAs(blob, 'My_Fitness_Plan.pdf');
+  }
 };

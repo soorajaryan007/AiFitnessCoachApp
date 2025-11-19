@@ -26,8 +26,12 @@ export default function RootLayout({
     <html lang="en">
       <head>
 
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7999471710145982"
-     crossorigin="anonymous"></script>
+     <script
+  async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7999471710145982"
+  crossOrigin="anonymous"
+></script>
+
 
       </head>
       <body

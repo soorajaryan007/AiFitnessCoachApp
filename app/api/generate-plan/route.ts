@@ -103,7 +103,8 @@ RULES:
     response_format: { type: "json_object" },
   });
 
-  const plan = JSON.parse(completion.choices[0].message.content);
+const raw = completion.choices[0].message.content ?? "{}";
+const plan = JSON.parse(raw);
+return Response.json(plan);
 
-  return Response.json(plan);
 }

@@ -1,71 +1,109 @@
-import { NextResponse } from "next/server";
-import Groq from "groq-sdk";
+import { Groq } from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
-  try {
-    const { 
-      name, age, gender, height, weight, 
-      goal, fitnessLevel, workoutLocation, dietaryPreferences 
-    } = await req.json();
+  const body = await req.json();
 
-    const prompt = `
-      Act as a world-class personal trainer and nutritionist.
-      
-      User Profile:
-      - Name: ${name}, Age: ${age}, Gender: ${gender}
-      - Height: ${height}, Weight: ${weight}
-      - Fitness Goal: ${goal}
-      - Current Level: ${fitnessLevel}
-      - Location/Equipment: ${workoutLocation}
-      - Diet Type: ${dietaryPreferences}
-      
-      Generate a 1-day detailed workout and diet plan strictly in JSON format. 
-      
-      IMPORTANT constraints:
-      1. Workout must be suitable for "${workoutLocation}" (e.g., if Home, no machines).
-      2. Diet must strictly follow "${dietaryPreferences}".
-      3. Do not include any markdown formatting (like \`\`\`json), just return the raw JSON object.
-      
-      JSON Structure to follow strictly:
-      {
-        "workout": [
-          { "exercise": "Exercise Name", "sets": "3", "reps": "12", "image_prompt": "${gender} doing exercise in ${workoutLocation} environment high quality" }
-        ],
-        "diet": [
-          { "meal": "Breakfast", "food": "Food Name", "calories": "350", "image_prompt": "food photography of ${dietaryPreferences} meal" }
-        ],
-        "motivation": "A short punchy quote about discipline."
-      }
-    `;
+  const prompt = `You are a certified fitness coach, nutritionist, and physiologist.  
+Generate a highly detailed, structured, personalized fitness plan based on the following user data:
 
-    const completion = await groq.chat.completions.create({
-      messages: [
+USER DATA:
+- Name: {{name}}
+- Age: {{age}}
+- Gender: {{gender}}
+- Height: {{height}}
+- Weight: {{weight}}
+- Fitness Level: {{fitnessLevel}}
+- Workout Location: {{workoutLocation}}
+- Goal: {{goal}}
+- Dietary Preference: {{dietaryPreferences}}
+
+INSTRUCTIONS:
+Return the result STRICTLY in the following JSON format:
+
+{
+  "motivation": "string",
+  "weekly_plan": [
+    {
+      "day": "Monday",
+      "focus": "Full Body / Upper Body / Legs / etc",
+      "duration": "45 minutes",
+      "warmup": ["5 min brisk walk", "Dynamic stretches", ...],
+      "workout": [
         {
-          role: "system",
-          content: "You are a fitness API that returns strictly structured JSON responses. No markdown. No conversational text."
+          "exercise": "Barbell Squat",
+          "sets": "4",
+          "reps": "8–10",
+          "rest": "90 sec",
+          "tempo": "3-1-1",
+          "image_prompt": "muscular athlete doing barbell squat in gym"
         },
-        {
-          role: "user",
-          content: prompt,
-        },
+        ...
       ],
-      // 👇 UPDATED MODEL NAME HERE 👇
-      model: "llama-3.3-70b-versatile", 
-      
-      response_format: { type: "json_object" }, 
-    });
-
-    const responseContent = completion.choices[0]?.message?.content;
-    
-    if (!responseContent) {
-      throw new Error("No content generated");
+      "cooldown": ["Hamstring stretches", "Breathing exercises"],
+      "notes": "Posture tips or modifications"
     }
-
-    return NextResponse.json(JSON.parse(responseContent));
-  } catch (error) {
-    console.error("Groq API Error:", error);
-    return NextResponse.json({ error: "Failed to generate plan" }, { status: 500 });
+  ],
+  "daily_workout": [
+    {
+      "exercise": "Pushups",
+      "sets": "4",
+      "reps": "12",
+      "rest": "60 sec",
+      "tempo": "2-1-1",
+      "image_prompt": "fit male doing pushups"
+    }
+  ],
+  "diet": [
+    {
+      "meal": "Breakfast",
+      "food": "Oats with banana & peanut butter",
+      "calories": 350,
+      "macros": {
+        "protein": "18g",
+        "carbs": "45g",
+        "fat": "12g"
+      },
+      "image_prompt": "healthy bowl of oats"
+    },
+    ...
+  ],
+  "nutrition_summary": {
+    "total_daily_calories": 2200,
+    "protein_target": "140g",
+    "carb_target": "220g",
+    "fat_target": "60g",
+    "hydration_goal": "3 litres/day",
+    "foods_to_avoid": ["fried food", "sugary drinks"],
+    "recommended_foods": ["leafy greens", "lean meats", "eggs", "legumes"]
+  },
+  "lifestyle": {
+    "sleep_goal": "7-9 hours",
+    "steps_goal": "8000 steps/day",
+    "stress_management": ["deep breathing", "10 min meditation"],
+    "weekly_progression": "Increase weight by 2.5–5% every week"
   }
+}
+
+RULES:
+- Do NOT include extra text outside JSON.
+- Do NOT skip fields.
+- Make the plan scientifically accurate and detailed.
+- All workouts must match user fitness level and workout location.
+`;
+
+  const completion = await client.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: "system", content: "You are a fitness expert." },
+      { role: "user", content: prompt }
+    ],
+    temperature: 0.6,
+    response_format: { type: "json_object" },
+  });
+
+  const plan = JSON.parse(completion.choices[0].message.content);
+
+  return Response.json(plan);
 }

@@ -1,34 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
-const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
+const chatFile = path.join(process.cwd(), "data/chats.json");
 
-// Temporary in-memory storage (use DB later)
-let chatIDs: string[] = [];
+function saveChatId(id: number) {
+  let data: number[] = [];
+
+  if (fs.existsSync(chatFile)) {
+    data = JSON.parse(fs.readFileSync(chatFile, "utf8"));
+  }
+
+  if (!data.includes(id)) {
+    data.push(id);
+    fs.writeFileSync(chatFile, JSON.stringify(data));
+  }
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
+  const message = body.message;
 
-  const chatId = body.message?.chat?.id;
-  const text = body.message?.text;
-
-  if (chatId && !chatIDs.includes(chatId)) {
-    chatIDs.push(chatId);
+  if (!message?.text) {
+    return NextResponse.json({ ok: true });
   }
 
+  const chatId = message.chat.id;
+  const text = message.text.trim();
+
   if (text === "/start") {
-    await fetch(`${TELEGRAM_API}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: "Welcome! You will now receive your daily fitness plan here 💪🔥",
-      }),
-    });
+    saveChatId(chatId);
+
+    await fetch(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: "Welcome! 🎉\n\nYou will now receive daily fitness plans automatically here on Telegram.",
+        }),
+      }
+    );
   }
 
   return NextResponse.json({ ok: true });
-}
-
-export async function GET() {
-  return NextResponse.json({ chatIDs });
 }

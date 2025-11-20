@@ -233,7 +233,7 @@ export default function Home() {
                 </button>
               </div>
             </div>
-
+                  
             {/* MOTIVATION */}
             <div className={`p-6 rounded-xl border text-center italic text-xl ${cardBg}`}>
               "{plan.motivation}"
@@ -288,6 +288,13 @@ export default function Home() {
             >
               Start Over
             </button>
+            <button
+  onClick={() => window.open("https://t.me/surya_ai_fitness_app_bot", "_blank")}
+  className="bg-blue-600 text-white px-4 py-2 rounded"
+>
+  Send Today’s Plan on Telegram
+</button>
+
           </motion.div>
         )}
       </div>

@@ -1,12 +1,12 @@
-# 💪 AI Fitness Coach App
-
+# AI Fitness Coach App
+WebLink: https://ai-fitness-coach-app-7wtc.vercel.app/
 An AI-powered fitness assistant built using **Next.js** that generates **personalized workout and diet plans** using LLMs.
 
 It also includes voice and image generation features for a more immersive experience.
 
 ---
 
-## 🚀 Features
+## Features
 
 Users can provide their details like:
 
@@ -20,7 +20,7 @@ Users can provide their details like:
 
 ---
 
-### 🧠 AI-Powered Plan Generation
+### AI-Powered Plan Generation
 
 The app uses an **LLM API** (OpenAI / Gemini / HuggingFace / Claude) to generate:
 
@@ -35,14 +35,14 @@ The app uses an **LLM API** (OpenAI / Gemini / HuggingFace / Claude) to generate
 
 ---
 
-### 🔊 Voice Features
+### Voice Features
 
 - **Read My Plan** — Uses **ElevenLabs** (or any TTS API) to speak out the Workout and Diet Plans
 - Option to choose which section to listen to — *Workout or Diet*
 
 ---
 
-### 🖼️ Image Generation
+### Image Generation
 
 - When user clicks an exercise or meal item, the app uses **AI image generation** (nano banana / replicate) or any free AI modal of your choise
 to generate a **visual representation** of that workout or food.
@@ -54,7 +54,7 @@ Examples:
 
 ---
 
-### 🧾 Export & Extra Features
+### Export & Extra Features
 
 - 📄 Export generated plan as PDF
 - 🌗 Dark / Light mode
@@ -65,7 +65,7 @@ Examples:
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Tools |
 | --- | --- |
@@ -78,10 +78,7 @@ Examples:
 
 
 
-Time EST - 24 to 30 Hours
-Submit - 
-Live App link
-Github Link
-Video demo of complete app you build.
+Live App link : https://ai-fitness-coach-app-7wtc.vercel.app/
 
-All the best
+
+
